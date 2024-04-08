@@ -17,9 +17,6 @@ fn _vectors_vecf16_subscript(_fcinfo: pgrx::pg_sys::FunctionCallInfo) -> Interna
         is_assignment: bool,
     ) {
         unsafe {
-            if (*indirection).length != 1 {
-                pgrx::pg_sys::error!("type vecf16 does only support one subscript");
-            }
             if !is_slice {
                 pgrx::pg_sys::error!("type vecf16 does only support slice fetch");
             }
@@ -27,7 +24,12 @@ fn _vectors_vecf16_subscript(_fcinfo: pgrx::pg_sys::FunctionCallInfo) -> Interna
                 pgrx::pg_sys::error!("type vecf16 does not support subscripted assignment");
             }
             let subscript = &mut *subscript;
-            let ai = (*(*indirection).elements.add(0)).ptr_value as *mut pgrx::pg_sys::A_Indices;
+            let elements = (*indirection).elements;
+            let len = (*indirection).length;
+            let mut ai = vec![(*elements.add(0)).ptr_value as *mut pgrx::pg_sys::A_Indices];
+            for i in 1..len {
+                ai.push((*elements.add(i as usize)).ptr_value as *mut pgrx::pg_sys::A_Indices);
+            }
             subscript.refupperindexpr = pgrx::pg_sys::lappend(
                 std::ptr::null_mut(),
                 if !(*ai).uidx.is_null() {

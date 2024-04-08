@@ -21,8 +21,10 @@ SELECT ('[0, 1, 2, 3, 4, 5, 6, 7]'::vecf16)[1:8];
 ----
 [1, 2, 3, 4, 5, 6, 7]
 
-statement error type vecf16 does only support one subscript
+query I
 SELECT ('[0, 1, 2, 3, 4, 5, 6, 7]'::vecf16)[3:3][1:1];
+----
+NULL
 
 statement error type vecf16 does only support slice fetch
 SELECT ('[0, 1, 2, 3, 4, 5, 6, 7]'::vecf16)[3];
