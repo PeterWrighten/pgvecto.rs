@@ -26,56 +26,57 @@ fn _vectors_vecf16_subscript(_fcinfo: pgrx::pg_sys::FunctionCallInfo) -> Interna
             let subscript = &mut *subscript;
             let elements = (*indirection).elements;
             let len = (*indirection).length;
-            let mut ai = vec![(*elements.add(0)).ptr_value as *mut pgrx::pg_sys::A_Indices];
-            for i in 1..len {
-                ai.push((*elements.add(i as usize)).ptr_value as *mut pgrx::pg_sys::A_Indices);
+
+            for i in 0..len {
+                let ai = (*elements.add(i as usize)).ptr_value as *mut pgrx::pg_sys::A_Indices;
+                subscript.refupperindexpr = pgrx::pg_sys::lappend(
+                    std::ptr::null_mut(),
+                    if !(*ai).uidx.is_null() {
+                        let subexpr =
+                            pgrx::pg_sys::transformExpr(pstate, (*ai).uidx, (*pstate).p_expr_kind);
+                        let subexpr = pgrx::pg_sys::coerce_to_target_type(
+                            pstate,
+                            subexpr,
+                            pgrx::pg_sys::exprType(subexpr),
+                            pgrx::pg_sys::INT4OID,
+                            -1,
+                            pgrx::pg_sys::CoercionContext_COERCION_ASSIGNMENT,
+                            pgrx::pg_sys::CoercionForm_COERCE_IMPLICIT_CAST,
+                            -1,
+                        );
+                        if subexpr.is_null() {
+                            pgrx::error!("vecf16 subscript must have type integer");
+                        }
+                        subexpr.cast()
+                    } else {
+                        std::ptr::null_mut()
+                    },
+                );
+                subscript.reflowerindexpr = pgrx::pg_sys::lappend(
+                    std::ptr::null_mut(),
+                    if !(*ai).lidx.is_null() {
+                        let subexpr =
+                            pgrx::pg_sys::transformExpr(pstate, (*ai).lidx, (*pstate).p_expr_kind);
+                        let subexpr = pgrx::pg_sys::coerce_to_target_type(
+                            pstate,
+                            subexpr,
+                            pgrx::pg_sys::exprType(subexpr),
+                            pgrx::pg_sys::INT4OID,
+                            -1,
+                            pgrx::pg_sys::CoercionContext_COERCION_ASSIGNMENT,
+                            pgrx::pg_sys::CoercionForm_COERCE_IMPLICIT_CAST,
+                            -1,
+                        );
+                        if subexpr.is_null() {
+                            pgrx::error!("vecf16 subscript must have type integer");
+                        }
+                        subexpr.cast()
+                    } else {
+                        std::ptr::null_mut()
+                    },
+                );
             }
-            subscript.refupperindexpr = pgrx::pg_sys::lappend(
-                std::ptr::null_mut(),
-                if !(*ai).uidx.is_null() {
-                    let subexpr =
-                        pgrx::pg_sys::transformExpr(pstate, (*ai).uidx, (*pstate).p_expr_kind);
-                    let subexpr = pgrx::pg_sys::coerce_to_target_type(
-                        pstate,
-                        subexpr,
-                        pgrx::pg_sys::exprType(subexpr),
-                        pgrx::pg_sys::INT4OID,
-                        -1,
-                        pgrx::pg_sys::CoercionContext_COERCION_ASSIGNMENT,
-                        pgrx::pg_sys::CoercionForm_COERCE_IMPLICIT_CAST,
-                        -1,
-                    );
-                    if subexpr.is_null() {
-                        pgrx::error!("vecf16 subscript must have type integer");
-                    }
-                    subexpr.cast()
-                } else {
-                    std::ptr::null_mut()
-                },
-            );
-            subscript.reflowerindexpr = pgrx::pg_sys::lappend(
-                std::ptr::null_mut(),
-                if !(*ai).lidx.is_null() {
-                    let subexpr =
-                        pgrx::pg_sys::transformExpr(pstate, (*ai).lidx, (*pstate).p_expr_kind);
-                    let subexpr = pgrx::pg_sys::coerce_to_target_type(
-                        pstate,
-                        subexpr,
-                        pgrx::pg_sys::exprType(subexpr),
-                        pgrx::pg_sys::INT4OID,
-                        -1,
-                        pgrx::pg_sys::CoercionContext_COERCION_ASSIGNMENT,
-                        pgrx::pg_sys::CoercionForm_COERCE_IMPLICIT_CAST,
-                        -1,
-                    );
-                    if subexpr.is_null() {
-                        pgrx::error!("vecf16 subscript must have type integer");
-                    }
-                    subexpr.cast()
-                } else {
-                    std::ptr::null_mut()
-                },
-            );
+
             subscript.refrestype = subscript.refcontainertype;
         }
     }
